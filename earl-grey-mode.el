@@ -183,6 +183,9 @@
                      "with" "where" "each" "each="))
        "$"))
 
+(setq real-earl-keymac-regexp
+      "\\b\\(?:return\\|break\\|continue\\|pass\\|else\\)\\b")
+
 (setq earl-id-regexp
       (regexp-opt earl-id-characters))
 (setq earl-c1op-regexp
@@ -933,23 +936,16 @@
     (,real-earl-op-regexp
      (0
       (cond
-       ((equal (match-string 0) ":")
+       ((member (match-string 0) '(":" "|"))
         'earl-font-lock-wordop)
        ((string-match real-earl-wordop-regexp (match-string 0))
         'earl-font-lock-wordop)
        (t
         'earl-font-lock-op))))
 
-    ;; ;; ("\\b\\(?:with\\|where\\|when\\|in\\|and\\|or\\|as\\|instanceof)\\b"
-    ;; (,earl-wordop-regexp
-    ;;  . 'earl-font-lock-major-constructor)
-
-    ;; (,earl-keymac-regexp
-    ;;  . 'earl-font-lock-major-constructor)
-
-    ;; Certain identifiers
-    ;; (,(concat "\\(" real-earl-id-regexp "\\)"
-    ;;           " " real-earl-id-regexp)
+    ;; Some macros that have no arguments and therefore won't be highlighted
+    (,earl-keymac-regexp
+     . 'earl-font-lock-major-constructor)
 
     ;; Heuristic to highlight keywords
     (,real-earl-id-regexp
@@ -986,85 +982,6 @@
            (t
             nil))))))
 
-    ;; ;; Operators
-    ;; (,earl-c2op-regexp
-    ;;  (0 (cond
-
-    ;;      ;; First case is the ":" operator. In the expression "a b:
-    ;;      ;; c", which means a(:){b, c} we want to highlight "a" (the
-    ;;      ;; control structure)
-    ;;      ((equal (match-string 0) ":")
-    ;;       (let* (;; pos <- the start of the identifier to highlight
-    ;;              ;(pos (earl-backward-primary-sexp (match-beginning 0)))
-    ;;              (constructor-range (earl-find-constructor (match-beginning 0)))
-    ;;              (constructor-start (car constructor-range))
-    ;;              (constructor-end (cdr constructor-range))
-    ;;              (state (syntax-ppss))
-    ;;              ;; Are we in a string or a comment?
-    ;;              (inactive-region (or (nth 3 state) (nth 4 state))))
-    ;;         (if inactive-region
-    ;;             ;; If we are in a string or a comment, we don't want to
-    ;;             ;; highlight something weird, or override the string
-    ;;             ;; highlighting (we highlight the control structure with
-    ;;             ;; put-text-property directly, so it overrides string
-    ;;             ;; highlighting - maybe there's a better way to do it?)
-    ;;             nil
-    ;;           (save-excursion
-    ;;             (goto-char constructor-start)
-    ;;             (;when (looking-at earl-word-regexp)
-    ;;              let ((text (buffer-substring-no-properties constructor-start constructor-end)))
-    ;;               (cond
-    ;;                ;; A. The identifier starts a definition, i.e. "def"
-    ;;                ((member text earl-definition-constructors)
-    ;;                 ;; We highlight "def" (or whatever definition constructor this is)
-    ;;                 (put-text-property ;(match-beginning 0) (match-end 0)
-    ;;                                    constructor-start constructor-end
-    ;;                                    'face 'earl-font-lock-major-constructor)
-    ;;                 (goto-char constructor-end) ; (match-end 0))
-    ;;                 (skip-chars-forward " ") ;; we align ourselves on the next expression
-    ;;                 (if (looking-at earl-word-regexp)
-    ;;                     ;; We highlight the second term, e.g. in "def f[x]:"
-    ;;                     ;; we highlight f.
-    ;;                     (put-text-property ;constructor-start constructor-end
-    ;;                                        (match-beginning 0) (match-end 0)
-    ;;                                        'face 'earl-font-lock-definition)))
-    ;;                ;; B. The identifier is important, i.e. "if", "else", "for", "\lambda\"
-    ;;                ((member text earl-major-constructors)
-    ;;                 (put-text-property constructor-start constructor-end
-    ;;                                    ;(match-beginning 0) (match-end 0)
-    ;;                                    'face 'earl-font-lock-major-constructor))
-    ;;                ;; C. The identifier is unknown, but we still
-    ;;                ;; highlight it, albeit differently than if it was
-    ;;                ;; known (default is bold black, which is less
-    ;;                ;; visible).
-    ;;                (t
-    ;;                 (put-text-property constructor-start constructor-end
-    ;;                                    ;(match-beginning 0) (match-end 0)
-    ;;                                    'face 'earl-font-lock-constructor)))))
-    ;;           ;; The highlighted term might not be on the same line as
-    ;;           ;; the ":", so it's important to set the
-    ;;           ;; font-lock-multiline property on the whole range.
-    ;;           (put-text-property constructor-start (point) 'font-lock-multiline t)
-    ;;           ;; (if (end-of-line-p (point))
-    ;;           ;;     'earl-font-lock-warning
-    ;;           'earl-font-lock-constructor)))
-
-    ;;      ;; ((match-string 1)
-    ;;      ;;  ;; Second case are category 4 operators. Characters in
-    ;;      ;;  ;; categories 3 and 4 can be mixed together, but if there is
-    ;;      ;;  ;; at least one c4 character, the whole op is promoted to c4
-    ;;      ;;  ;; and we use the c4 face.
-    ;;      ;;  'earl-font-lock-c4op)
-
-    ;;      (t
-    ;;       ;; Third case, there are only c3 characters, so it's a c3 op.
-    ;;       'earl-font-lock-c3op))))
-
-    ("." 0 (let ((c (char-before)))
-             (if (or (= c ?\t)
-                     (> (char-before) 127))
-                 'earl-font-lock-invalid
-               nil)))
     )
   "Keywords for highlighting.")
 
