@@ -1,12 +1,6 @@
 
-;;; (load "earl-codec.el")
 (load "earl-data.el")
 
-;; We don't automatically turn on earl-use-codec in emacs version
-;; 22 and earlier, and we don't bother with encoding Unicode
-;; characters, should they be typed in (maybe that's fixable?
-;; (char-to-string exotic-unicode-character) fails in emacs 22).
-(setq earl-emacs-recent-enough (>= emacs-major-version 23))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; CUSTOMIZATION ;;
@@ -299,46 +293,6 @@
 ;;;;;;;;;;;;
 ;; MOTION ;;
 ;;;;;;;;;;;;
-
-;; (defun earl-forward-char (&optional count)
-;;   (interactive "p")
-;;   (let ((orig (point)))
-;;     (dotimes (i count)
-;;       ;; (save-match-data
-;;       (if (looking-at earl-codec-regexp)
-;;           (goto-char (match-end 0))
-;;         (forward-char)))
-;;     (- (point) orig)))
-
-;; (defun earl-backward-char (&optional count)
-;;   (interactive "p")
-;;   (let ((orig (point)))
-;;     (dotimes (i count)
-;;       ;; (save-match-data
-;;       (let ((orig (point)))
-;;         (cond
-;;          ((equal (char-before) ?`)
-;;           (backward-char)
-;;           (condition-case nil
-;;               (save-match-data
-;;                 (search-backward "`")
-;;                 (if (looking-at earl-codec-named-code-regexp)
-;;                     (goto-char (match-beginning 0))
-;;                   (goto-char (- orig 1))))
-;;             (error nil)))
-;;          ((> (point) 2)
-;;           (let ((consec 1))
-;;             (save-excursion
-;;               (backward-char 2)
-;;               (condition-case nil
-;;                   (while (looking-at earl-codec-digraph-regexp)
-;;                     (setq consec (+ consec 1))
-;;                     (backward-char))
-;;                 (error nil)))
-;;             (backward-char (- 2 (mod consec 2)))))
-;;          (t
-;;           (backward-char)))))
-;;     (- orig (point))))
 
 (setq earl-last-token nil)
 
@@ -847,7 +801,6 @@
 
 (defvar earl-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; (define-key map "\C-c\C-u" 'earl-codec-mode)
 
     (define-key map [backspace] 'earl-backspace)
 
@@ -856,15 +809,6 @@
     (define-key map "\C-?" 'earl-delete-backward-char)
     (define-key map "\C-d" 'earl-delete-char)
     (define-key map "\M-;" 'earl-comment-dwim)
-    ;; (define-key map "\C-c\C-e" 'earl-encode-region)
-    (define-key map "\C-j" 'earl-newline)
-    (define-key map [C-return] 'earl-newline)
-    ;; (define-key map "(" 'earl-electric-opening-parens)
-    ;; (define-key map "[" 'earl-electric-opening-bracket)
-    ;; (define-key map "{" 'earl-electric-opening-brace)
-    ;; (define-key map ")" 'earl-electric-closing-parens)
-    ;; (define-key map "]" 'earl-electric-closing-bracket)
-    ;; (define-key map "}" 'earl-electric-closing-brace)
 
     (define-key map "\C-c\C-j" 'earl-indent-back)
     (define-key map "\C-t" 'forward-char)
@@ -876,26 +820,6 @@
     (define-key map [C-delete] 'earl-kill-word)
     (define-key map [C-backspace] 'earl-kill-backward-word)
     map))
-
-(defun earl-add-encoder (encoder)
-  (let ((c (car encoder))
-        (repl (cdr encoder)))
-    (define-key earl-mode-map (char-to-string c) repl)))
-
-;; (if earl-emacs-recent-enough
-;;     (mapcar 'earl-add-encoder earl-codec-encode-list))
-
-
-(defvar earl-encoder-table
-  (make-hash-table :test 'eq)
-  "Hash table mapping unicode character code -> string encoding.")
-
-(defun earl-encoder-add-entry (entry)
-  (let ((character (car entry))
-        (encoding (cdr entry)))
-    (puthash character encoding earl-encoder-table)))
-
-;; (mapcar 'earl-encoder-add-entry earl-codec-encode-list)
 
 
 (defvar earl-mode-syntax-table
@@ -1115,9 +1039,6 @@
           (indent-region-function . earl-indent-region)
           ))
 
-  ;; (if earl-use-codec
-  ;;     (earl-codec-mode t))
-
   (setq major-mode 'earl-mode)
   (setq mode-name "Earl Grey"))
 
@@ -1177,166 +1098,4 @@ uncommented."
       (skip-chars-forward " \n")
       (insert ";( "))))
 
-;; (defun earl-encode-range (beg end)
-;;   (when (> beg end)
-;;     (let ((tmp beg))
-;;       (setq beg end)
-;;       (setq end tmp)))
-;;   (save-excursion
-;;     (goto-char beg)
-;;     (if (inside-encoding-p)
-;;         (error "The region to encode does not start at an encoding boundary."))
-;;     (let ((m (make-marker))
-;;           (inside-encoding nil))
-;;       (set-marker m end)
-;;       (while (or (< (point) m)
-;;                  inside-encoding)
-;;         (let ((c (char-after)))
-;;           (cond
-;;            ;; Unicode characters must be encoded.
-;;            ((> c 127)
-;;             (delete-char 1)
-;;             (insert-before-markers (gethash c earl-encoder-table)))
-;;            ;; All slashes are assumed to be literal, so they are doubled
-;;            ((= c ?`)
-;;             (setq inside-encoding (not inside-encoding))
-;;             (delete-char 1)
-;;             (insert-before-markers "``"))
-;;            ;; Digraphs are escaped, e.g. <- becomes `<``-`
-;;            ((looking-at earl-codec-digraph-regexp)
-;;             (delete-char 1)
-;;             (insert-before-markers "`" (char-to-string c) "`")
-;;             (setq c (char-after))
-;;             (delete-char 1)
-;;             (insert-before-markers "`" (char-to-string c) "`"))
-;;            ;; Other characters are ignored
-;;            (t
-;;             (forward-char))))))
-;;     (point)))
-
-;; (defun earl-encode-region (&optional count)
-;;   "Encode the region using the Earl Grey encoding. Unicode
-;; characters are encoded, e.g. λ as `lambda` and ← as
-;; <-. Expressions that normally encode characters are encoded as
-;; well, e.g. `lambda` will become ``lambda`` and <- will
-;; become `<``-`. If this command is executed right after a
-;; yank (paste), the whole pasted region will be encoded."
-;;   (interactive "p")
-;;   (if (and transient-mark-mode mark-active)      
-;;       (goto-char (earl-encode-range (region-beginning) (region-end)))
-;;     (if (eq last-command 'yank)
-;;         (goto-char (earl-encode-range (point) (mark)))
-;;       (goto-char (earl-encode-range (point) (+ (point) count))))))
-
-(defun earl-newline ()
-  "Inserts a new line and indents it. If the point is right after
-  the \":\" operator, this inserts \"(\", then a newline, then
-  \")\" on the line right after that, and then places the point
-  on the new line between the brackets. If anything was after the
-  colon, it will be placed on its own line and the point will be
-  placed after it."
-  (interactive)
-  (cond
-   ((or (bobp) (eobp))
-    (insert "\n"))
-   (t
-    (while (= (char-before) ?\ )
-      (delete-backward-char 1))
-    (while (= (char-after) ?\ )
-      (delete-char 1))
-    (if (not (equal (earl-prev-operator) ":"))
-        (insert "\n")
-      (insert " (\n")
-      (earl-indent-line)
-      (if (end-of-line-p)
-          (insert "\n)")
-        (end-of-line)
-        (insert "\n\n)"))
-      (earl-indent-line)
-      (beginning-of-line)
-      (backward-char))
-    (earl-indent-line))))
-
-(defun earl-electric-closing-delimiter (delim)
-  ;; (if (and (looking-at (concat "[ \n]*" delim))
-  ;;          (= (earl-compute-indent (match-end 0))
-  ;;             (earl-current-indent (match-end 0))))
-  ;;     (goto-char (match-end 0))
-    (insert delim)
-    (earl-indent-line))
-
-(defun earl-electric-closing-parens ()
-  (interactive)
-  (earl-electric-closing-delimiter ")"))
-
-(defun earl-electric-closing-bracket ()
-  (interactive)
-  (earl-electric-closing-delimiter "]"))
-
-(defun earl-electric-closing-brace ()
-  (interactive)
-  (earl-electric-closing-delimiter "}"))
-
-
-
-(defun earl-electric-opening-delimiter (open close)
-  (insert open))
-  ;; (insert close)
-  ;; (backward-char))
-
-(defun earl-electric-opening-parens ()
-  (interactive)
-  (earl-electric-opening-delimiter "(" ")"))
-
-(defun earl-electric-opening-bracket ()
-  (interactive)
-  (earl-electric-opening-delimiter "["  "]"))
-
-(defun earl-electric-opening-brace ()
-  (interactive)
-  (earl-electric-opening-delimiter "{"  "}"))
-
-
 (provide 'earl-mode)
-
-
-;; What to do
-;; x Replace \in\ by ∈, etc.
-;;   x Make it so that inputting ∈ produces \in\ internally, etc.
-;;   x Option to always show expanded version
-;;   x Option to never show expanded version
-;;   - Option to show the expanded version for the current line
-;; x Different colors for:
-;;   x Identifier characters
-;;   x Strict operator characters
-;;   x Lazy operator characters
-;;   x Illegal characters
-;; x Comments
-;;   x ;; ... \n
-;;   x ;* ... *;
-;; x Strings
-;;   x ""
-;;   x «» (nested)
-;;   x Variable interpolation: ⇑()
-;; x Bold face or different color for X in X: Y
-;; x Indent rules
-;; x Electric parens?
-
-;; FIXME: (very minor) a (b \nc):+ ... does not highlight "a", which
-;; is the proper behavior since ":+" is not a special operator, but
-;; when the + is removed, "a" is not automatically highlighted. It is
-;; highlighted eventually, or if one deletes and reinserts ":". Not
-;; sure if there is an easy fix (nor if this ever even occurs in real
-;; situations). Extending the range of the font-lock-multiline
-;; property did not seem to fix. Same kind of problem happens before
-;; the structure, e.g. removing "+" in "a [b\nc] + d:"
-
-;; FIXED with font-lock-multiline? FIXME: there is an issue when
-;; editing a multiline <<>> string, which seems to prevent the
-;; highlighting of other <<>> strings after it. Re-fontifying the
-;; buffer works, and so does modifying lines that are after, or close
-;; to the end of the construct.
-
-;; FIXME: (minor) \esc\<< and \esc\>> should not open or close quotes,
-;; i.e. <<a b c \esc\>> d e>> is a well-formed complete quote. \esc\<<
-;; is escaped properly, it's the closing form that's not handled.
