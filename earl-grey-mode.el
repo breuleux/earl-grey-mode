@@ -83,15 +83,20 @@
 
 ;; Operator faces
 
-(defface earl-font-lock-c3op
+(defface earl-font-lock-wordop
+  (earl-stock-face "black" "white" t)
+  "Face for operators that are words (each with etc.)"
+  :group 'earl-faces)
+
+(defface earl-font-lock-op
   (earl-stock-face "blue" "light blue")
   "Face for category 3 operators (+ - * / % etc.)"
   :group 'earl-faces)
 
-(defface earl-font-lock-c4op
-  (earl-stock-face "dark blue" "deep sky blue")
-  "Face for category 4 operators (← :: ∧ ∨ etc.)"
-  :group 'earl-faces)
+;; (defface earl-font-lock-c4op
+;;   (earl-stock-face "dark blue" "deep sky blue")
+;;   "Face for category 4 operators (← :: ∧ ∨ etc.)"
+;;   :group 'earl-faces)
 
 ;; Token faces
 
@@ -154,6 +159,30 @@
 ;; REGULAR EXPRESSIONS ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(setq real-earl-id-regexp
+      "[A-Za-z_$][A-Za-z_$]*")
+
+(setq real-earl-wordop-regexp
+      (concat
+       "\\b"
+       (regexp-opt '("with" "where" "each" "when" "in" "and" "or" "as" "not"))
+       "\\b"))
+
+(setq real-earl-opchar-regexp
+      "[-+*/~^<>=%&|?!@#.:']")
+
+(setq real-earl-op-regexp
+      (concat
+       "\\(?:" real-earl-wordop-regexp "\\|" real-earl-opchar-regexp "\\)"
+       real-earl-opchar-regexp "*"))
+
+(setq real-earl-lowp-regexp
+      (concat
+       "^"
+       (regexp-opt '(":" "->" "=>" "=" "+=" "-=" "/=" "*=" ">>=" "<<="
+                     "with" "where" "each" "each="))
+       "$"))
+
 (setq earl-id-regexp
       (regexp-opt earl-id-characters))
 (setq earl-c1op-regexp
@@ -166,32 +195,16 @@
       "\\b\\(?:with\\|where\\|each\\|when\\|in\\|and\\|or\\|as\\|instanceof\\|not\\)\\b")
 (setq earl-keymac-regexp
       "\\b\\(?:return\\|throw\\|delete\\|break\\|continue\\|match\\)\\b")
-;; (setq earl-c3op-regexp
-;;       (regexp-opt earl-c3op-characters))
-;; (setq earl-c4op-regexp
-;;       (regexp-opt earl-c4op-characters))
+
 (setq earl-opchar-regexp
       (concat earl-c1op-regexp
               "\\|"
               earl-c2op-regexp
               "\\|"
               earl-list-sep-regexp))
-              ;; "\\|"
-              ;; earl-c4op-regexp))
 
 (setq earl-word-regexp
       (concat earl-id-regexp "+"))
-;; (setq earl-c34op-regexp
-;;       (concat "\\(?:\\("
-;;               earl-c4op-regexp
-;;               "\\)\\|\\("
-;;               earl-c3op-regexp
-;;               "\\)\\)+"))
-
-;; (setq earl-escaped-char-literal-regexp
-;;       (concat "'`esc`\\(" earl-codec-regexp "\\|.\\)"))
-;; (setq earl-char-literal-regexp
-;;       (concat "'\\(" earl-codec-regexp "\\|.\\)"))
 
 (setq earl-bracket-openers '(?\( ?\[ ?\{))
 (setq earl-bracket-closers '(?\) ?\] ?\}))
@@ -889,117 +902,163 @@
     ("\\<[0-9][0-9_]*\\(\\.[0-9_]+\\)?\\([eE]\\+?-?[0-9_]+\\)?\\>"
      . 'earl-font-lock-number) ;; decimal notation 104, 342.1, 10e-10
 
-    ;; Declaration
-    ;; Color var in: var <- value, var# <- value or var :: type
-    ;; var is only colored if the character just before is one of [({,;
-    ;; modulo whitespace. This is nice, as it highlights only b in
-    ;; a, b <- value, which will look odd to the user if he or she meant
-    ;; [a, b] <- value.
-    (,(concat "\\(?:^\\|[\\|[({,;]\\) *\\(\\(?:"
-              earl-id-regexp
-              "\\)*\\(?: *#\\)?\\) *\\(<-\\|::\\)")
-     1 'earl-font-lock-assignment)
+    ;; ;; Declaration
+    ;; ;; Color var in: var <- value, var# <- value or var :: type
+    ;; ;; var is only colored if the character just before is one of [({,;
+    ;; ;; modulo whitespace. This is nice, as it highlights only b in
+    ;; ;; a, b <- value, which will look odd to the user if he or she meant
+    ;; ;; [a, b] <- value.
+    ;; (,(concat "\\(?:^\\|[\\|[({,;]\\) *\\(\\(?:"
+    ;;           earl-id-regexp
+    ;;           "\\)*\\(?: *#\\)?\\) *\\(<-\\|::\\)")
+    ;;  1 'earl-font-lock-assignment)
 
-    ;; Variable interpolation in strings: "\Up\(this) is interpolated"
-    ("$([^)]*)"
-     0 'earl-font-lock-interpolation t)
+    ;; ;; Variable interpolation in strings: "\Up\(this) is interpolated"
+    ;; ("$([^)]*)"
+    ;;  0 'earl-font-lock-interpolation t)
 
     ;; Symbol: .blabla
-    (,(concat "\\. *\\(" earl-id-regexp "\\)+")
+    (,(concat "\\.\\(" earl-id-regexp "\\)+")
      . 'earl-font-lock-symbol)
 
     ;; Struct: #blabla
-    (,(concat "[#~] *\\(" earl-id-regexp "\\)+")
+    (,(concat "[#]\\(" earl-id-regexp "\\)+")
      . 'earl-font-lock-prefix)
 
-    ;; Prefixes: @blabla or $blabla (or @   blabla)
-    (,(concat "[@$] *\\(" earl-id-regexp "\\)*")
+    ;; Prefixes: @blabla
+    (,(concat "[@]\\(" earl-id-regexp "\\)*")
      . 'earl-font-lock-prefix)
-
-    ;; Suffixes: blabla# (or blabla         #)
-    (,(concat "\\(" earl-id-regexp "\\)* *#")
-     . 'earl-font-lock-suffix)
-
-    ;; ("\\b\\(?:with\\|where\\|when\\|in\\|and\\|or\\|as\\|instanceof)\\b"
-    (,earl-wordop-regexp
-     . 'earl-font-lock-major-constructor)
-
-    (,earl-keymac-regexp
-     . 'earl-font-lock-major-constructor)
 
     ;; Operators
-    (,earl-c2op-regexp
-     (0 (cond
+    (,real-earl-op-regexp
+     (0
+      (cond
+       ((equal (match-string 0) ":")
+        'earl-font-lock-wordop)
+       ((string-match real-earl-wordop-regexp (match-string 0))
+        'earl-font-lock-wordop)
+       (t
+        'earl-font-lock-op))))
 
-         ;; First case is the ":" operator. In the expression "a b:
-         ;; c", which means a(:){b, c} we want to highlight "a" (the
-         ;; control structure)
-         ((equal (match-string 0) ":")
-          (let* (;; pos <- the start of the identifier to highlight
-                 ;(pos (earl-backward-primary-sexp (match-beginning 0)))
-                 (constructor-range (earl-find-constructor (match-beginning 0)))
-                 (constructor-start (car constructor-range))
-                 (constructor-end (cdr constructor-range))
-                 (state (syntax-ppss))
-                 ;; Are we in a string or a comment?
-                 (inactive-region (or (nth 3 state) (nth 4 state))))
-            (if inactive-region
-                ;; If we are in a string or a comment, we don't want to
-                ;; highlight something weird, or override the string
-                ;; highlighting (we highlight the control structure with
-                ;; put-text-property directly, so it overrides string
-                ;; highlighting - maybe there's a better way to do it?)
-                nil
-              (save-excursion
-                (goto-char constructor-start)
-                (;when (looking-at earl-word-regexp)
-                 let ((text (buffer-substring-no-properties constructor-start constructor-end)))
-                  (cond
-                   ;; A. The identifier starts a definition, i.e. "def"
-                   ((member text earl-definition-constructors)
-                    ;; We highlight "def" (or whatever definition constructor this is)
-                    (put-text-property ;(match-beginning 0) (match-end 0)
-                                       constructor-start constructor-end
-                                       'face 'earl-font-lock-major-constructor)
-                    (goto-char constructor-end) ; (match-end 0))
-                    (skip-chars-forward " ") ;; we align ourselves on the next expression
-                    (if (looking-at earl-word-regexp)
-                        ;; We highlight the second term, e.g. in "def f[x]:"
-                        ;; we highlight f.
-                        (put-text-property ;constructor-start constructor-end
-                                           (match-beginning 0) (match-end 0)
-                                           'face 'earl-font-lock-definition)))
-                   ;; B. The identifier is important, i.e. "if", "else", "for", "\lambda\"
-                   ((member text earl-major-constructors)
-                    (put-text-property constructor-start constructor-end
-                                       ;(match-beginning 0) (match-end 0)
-                                       'face 'earl-font-lock-major-constructor))
-                   ;; C. The identifier is unknown, but we still
-                   ;; highlight it, albeit differently than if it was
-                   ;; known (default is bold black, which is less
-                   ;; visible).
-                   (t
-                    (put-text-property constructor-start constructor-end
-                                       ;(match-beginning 0) (match-end 0)
-                                       'face 'earl-font-lock-constructor)))))
-              ;; The highlighted term might not be on the same line as
-              ;; the ":", so it's important to set the
-              ;; font-lock-multiline property on the whole range.
-              (put-text-property constructor-start (point) 'font-lock-multiline t)
-              ;; (if (end-of-line-p (point))
-              ;;     'earl-font-lock-warning
-              'earl-font-lock-constructor)))
+    ;; ;; ("\\b\\(?:with\\|where\\|when\\|in\\|and\\|or\\|as\\|instanceof)\\b"
+    ;; (,earl-wordop-regexp
+    ;;  . 'earl-font-lock-major-constructor)
 
-         ;; ((match-string 1)
-         ;;  ;; Second case are category 4 operators. Characters in
-         ;;  ;; categories 3 and 4 can be mixed together, but if there is
-         ;;  ;; at least one c4 character, the whole op is promoted to c4
-         ;;  ;; and we use the c4 face.
-         ;;  'earl-font-lock-c4op)
+    ;; (,earl-keymac-regexp
+    ;;  . 'earl-font-lock-major-constructor)
 
-         (t
-          ;; Third case, there are only c3 characters, so it's a c3 op.
-          'earl-font-lock-c3op))))
+    ;; Certain identifiers
+    ;; (,(concat "\\(" real-earl-id-regexp "\\)"
+    ;;           " " real-earl-id-regexp)
+
+    ;; Heuristic to highlight keywords
+    (,real-earl-id-regexp
+     (0
+      (let ((x0 (match-beginning 0))
+            (x1 (match-end 0)))
+        (save-excursion
+          (goto-char x1)
+          (cond
+
+           ((looking-at " *:")
+            (goto-char x0)
+            (cond
+             ((and (looking-back (concat "\\(" real-earl-op-regexp "\\) *"))
+                   (string-match real-earl-lowp-regexp (match-string 1)))
+              'earl-font-lock-major-constructor)
+             ((looking-back (concat "\\(^\\||\\) *"))
+              'earl-font-lock-major-constructor)
+             (t
+              nil)))
+
+           ((or (looking-at (concat " +" (regexp-opt '("(" "[" "{" "\""))))
+                (and
+                 (looking-at (concat " +" real-earl-id-regexp))
+                 (not (looking-at (concat " +" real-earl-op-regexp)))))
+            (goto-char x0)
+            (cond
+             ((and (looking-back (concat real-earl-op-regexp " *"))
+                   (not (looking-back " | *")))
+             ;; ((looking-back (concat real-earl-op-regexp " *"))
+              nil)
+             (t
+              'earl-font-lock-major-constructor)))
+           (t
+            nil))))))
+
+    ;; ;; Operators
+    ;; (,earl-c2op-regexp
+    ;;  (0 (cond
+
+    ;;      ;; First case is the ":" operator. In the expression "a b:
+    ;;      ;; c", which means a(:){b, c} we want to highlight "a" (the
+    ;;      ;; control structure)
+    ;;      ((equal (match-string 0) ":")
+    ;;       (let* (;; pos <- the start of the identifier to highlight
+    ;;              ;(pos (earl-backward-primary-sexp (match-beginning 0)))
+    ;;              (constructor-range (earl-find-constructor (match-beginning 0)))
+    ;;              (constructor-start (car constructor-range))
+    ;;              (constructor-end (cdr constructor-range))
+    ;;              (state (syntax-ppss))
+    ;;              ;; Are we in a string or a comment?
+    ;;              (inactive-region (or (nth 3 state) (nth 4 state))))
+    ;;         (if inactive-region
+    ;;             ;; If we are in a string or a comment, we don't want to
+    ;;             ;; highlight something weird, or override the string
+    ;;             ;; highlighting (we highlight the control structure with
+    ;;             ;; put-text-property directly, so it overrides string
+    ;;             ;; highlighting - maybe there's a better way to do it?)
+    ;;             nil
+    ;;           (save-excursion
+    ;;             (goto-char constructor-start)
+    ;;             (;when (looking-at earl-word-regexp)
+    ;;              let ((text (buffer-substring-no-properties constructor-start constructor-end)))
+    ;;               (cond
+    ;;                ;; A. The identifier starts a definition, i.e. "def"
+    ;;                ((member text earl-definition-constructors)
+    ;;                 ;; We highlight "def" (or whatever definition constructor this is)
+    ;;                 (put-text-property ;(match-beginning 0) (match-end 0)
+    ;;                                    constructor-start constructor-end
+    ;;                                    'face 'earl-font-lock-major-constructor)
+    ;;                 (goto-char constructor-end) ; (match-end 0))
+    ;;                 (skip-chars-forward " ") ;; we align ourselves on the next expression
+    ;;                 (if (looking-at earl-word-regexp)
+    ;;                     ;; We highlight the second term, e.g. in "def f[x]:"
+    ;;                     ;; we highlight f.
+    ;;                     (put-text-property ;constructor-start constructor-end
+    ;;                                        (match-beginning 0) (match-end 0)
+    ;;                                        'face 'earl-font-lock-definition)))
+    ;;                ;; B. The identifier is important, i.e. "if", "else", "for", "\lambda\"
+    ;;                ((member text earl-major-constructors)
+    ;;                 (put-text-property constructor-start constructor-end
+    ;;                                    ;(match-beginning 0) (match-end 0)
+    ;;                                    'face 'earl-font-lock-major-constructor))
+    ;;                ;; C. The identifier is unknown, but we still
+    ;;                ;; highlight it, albeit differently than if it was
+    ;;                ;; known (default is bold black, which is less
+    ;;                ;; visible).
+    ;;                (t
+    ;;                 (put-text-property constructor-start constructor-end
+    ;;                                    ;(match-beginning 0) (match-end 0)
+    ;;                                    'face 'earl-font-lock-constructor)))))
+    ;;           ;; The highlighted term might not be on the same line as
+    ;;           ;; the ":", so it's important to set the
+    ;;           ;; font-lock-multiline property on the whole range.
+    ;;           (put-text-property constructor-start (point) 'font-lock-multiline t)
+    ;;           ;; (if (end-of-line-p (point))
+    ;;           ;;     'earl-font-lock-warning
+    ;;           'earl-font-lock-constructor)))
+
+    ;;      ;; ((match-string 1)
+    ;;      ;;  ;; Second case are category 4 operators. Characters in
+    ;;      ;;  ;; categories 3 and 4 can be mixed together, but if there is
+    ;;      ;;  ;; at least one c4 character, the whole op is promoted to c4
+    ;;      ;;  ;; and we use the c4 face.
+    ;;      ;;  'earl-font-lock-c4op)
+
+    ;;      (t
+    ;;       ;; Third case, there are only c3 characters, so it's a c3 op.
+    ;;       'earl-font-lock-c3op))))
 
     ("." 0 (let ((c (char-before)))
              (if (or (= c ?\t)
