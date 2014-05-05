@@ -230,418 +230,347 @@
     (or (eolp)
         (looking-at ";;"))))
 
-(defun inside-encoding-p (&optional pos)
-  (unless pos (setq pos (point)))
-  (save-excursion
-    (save-match-data
-      (goto-char pos)
-      (beginning-of-line)
-      (catch 'return
-        (while t
-          (cond
-           ((= (point) pos) (throw 'return nil))
-           ((> (point) pos) (throw 'return t))
-           (t (forward-char 1))))))))
+;; (defun inside-encoding-p (&optional pos)
+;;   (unless pos (setq pos (point)))
+;;   (save-excursion
+;;     (save-match-data
+;;       (goto-char pos)
+;;       (beginning-of-line)
+;;       (catch 'return
+;;         (while t
+;;           (cond
+;;            ((= (point) pos) (throw 'return nil))
+;;            ((> (point) pos) (throw 'return t))
+;;            (t (forward-char 1))))))))
 
-(defun earl-re-search-forward (regexp &optional limit noerror repeat)
-  (let ((rval nil))
-    (setq rval (re-search-forward regexp limit noerror repeat))
-    (while (and rval (inside-encoding-p))
-      (goto-char (+ (match-beginning 0) 1))
-      (setq rval (re-search-forward regexp limit noerror repeat)))
-    rval))
+;; (defun earl-re-search-forward (regexp &optional limit noerror repeat)
+;;   (let ((rval nil))
+;;     (setq rval (re-search-forward regexp limit noerror repeat))
+;;     (while (and rval (inside-encoding-p))
+;;       (goto-char (+ (match-beginning 0) 1))
+;;       (setq rval (re-search-forward regexp limit noerror repeat)))
+;;     rval))
 
-(defun earl-re-search-backward (regexp &optional limit noerror repeat)
-  (let ((rval nil))
-    (setq rval (re-search-backward regexp limit noerror repeat))
-    (while (and rval (inside-encoding-p))
-      (goto-char (- (match-end 0) 1))
-      (setq rval (re-search-backward regexp limit noerror repeat)))
-    rval))
+;; (defun earl-re-search-backward (regexp &optional limit noerror repeat)
+;;   (let ((rval nil))
+;;     (setq rval (re-search-backward regexp limit noerror repeat))
+;;     (while (and rval (inside-encoding-p))
+;;       (goto-char (- (match-end 0) 1))
+;;       (setq rval (re-search-backward regexp limit noerror repeat)))
+;;     rval))
 
-(defun earl-next-operator (&optional pos)
-  (unless pos (setq pos (point)))
-  (save-excursion
-    (let ((line-span 1))
-      (goto-char pos)
-      (catch 'return
-        (while t
-          (let ((value (earl-forward-sexp-helper)))
-            (cond
-             ((equal value 'cont)
-              (setq line-span (1+ line-span)))
-             ((equal value 'comment)
-              t)
-             ((equal value 'operator)
-              (throw 'return (and (<= (count-lines pos (point)) line-span)
-                                  earl-last-token)))
-             (t (throw 'return nil)))))))))
+;; (defun earl-next-operator (&optional pos)
+;;   (unless pos (setq pos (point)))
+;;   (save-excursion
+;;     (let ((line-span 1))
+;;       (goto-char pos)
+;;       (catch 'return
+;;         (while t
+;;           (let ((value (earl-forward-sexp-helper)))
+;;             (cond
+;;              ((equal value 'cont)
+;;               (setq line-span (1+ line-span)))
+;;              ((equal value 'comment)
+;;               t)
+;;              ((equal value 'operator)
+;;               (throw 'return (and (<= (count-lines pos (point)) line-span)
+;;                                   earl-last-token)))
+;;              (t (throw 'return nil)))))))))
 
-(defun earl-prev-operator (&optional pos)
-  (unless pos (setq pos (point)))
-  (save-excursion
-    (goto-char pos)
-    (let ((line-span (if (bolp) 0 1)))
-      (catch 'return
-        (while t
-          (let ((value (earl-backward-sexp-helper)))
-            (cond
-             ((equal value 'cont)
-              (setq line-span (1+ line-span)))
-             ((equal value 'comment)
-              t)
-             ((equal value 'operator)
-              (throw 'return (and (<= (count-lines pos (point)) line-span)
-                                  earl-last-token)))
-             (t (throw 'return nil)))))))))
+;; (defun earl-prev-operator (&optional pos)
+;;   (unless pos (setq pos (point)))
+;;   (save-excursion
+;;     (goto-char pos)
+;;     (let ((line-span (if (bolp) 0 1)))
+;;       (catch 'return
+;;         (while t
+;;           (let ((value (earl-backward-sexp-helper)))
+;;             (cond
+;;              ((equal value 'cont)
+;;               (setq line-span (1+ line-span)))
+;;              ((equal value 'comment)
+;;               t)
+;;              ((equal value 'operator)
+;;               (throw 'return (and (<= (count-lines pos (point)) line-span)
+;;                                   earl-last-token)))
+;;              (t (throw 'return nil)))))))))
 
-(defun earl-looking-at-suffix ()
-  (save-excursion
-    (save-match-data
-      (and (not (string-match "^\\(,\\|;\\|:\\)+$" earl-last-token))
-           (or (string-match "^#+$" earl-last-token)
-               (and (not (memq (char-before) '(?\  ?\n)))
-                    (progn (earl-forward-operator-strict)
-                           (or (memq (char-after) '(?\  ?\n))
-                               (looking-at "\\\\")))))))))
+;; (defun earl-looking-at-suffix ()
+;;   (save-excursion
+;;     (save-match-data
+;;       (and (not (string-match "^\\(,\\|;\\|:\\)+$" earl-last-token))
+;;            (or (string-match "^#+$" earl-last-token)
+;;                (and (not (memq (char-before) '(?\  ?\n)))
+;;                     (progn (earl-forward-operator-strict)
+;;                            (or (memq (char-after) '(?\  ?\n))
+;;                                (looking-at "\\\\")))))))))
 
 
 ;;;;;;;;;;;;
 ;; MOTION ;;
 ;;;;;;;;;;;;
 
-(setq earl-last-token nil)
+;; (setq earl-last-token nil)
 
-(defun earl-last-token-range (start end)
-  (setq earl-last-token
-        (buffer-substring-no-properties start end)))
+;; (defun earl-last-token-range (start end)
+;;   (setq earl-last-token
+;;         (buffer-substring-no-properties start end)))
 
-(defun earl-forward-word-strict (&optional skip-chars skip-underscore)
-  (skip-chars-forward (or skip-chars "_ \n"))
-  (let ((success nil)
-        (orig (point)))
-    (while (and (looking-at earl-id-regexp)
-                (or skip-underscore
-                    (not (equal (match-string 0) "_"))))
-      (setq success t)
-      (forward-char 1))
-    (and success
-         (earl-last-token-range orig (point)))))
+;; (defun earl-forward-word-strict (&optional skip-chars skip-underscore)
+;;   (skip-chars-forward (or skip-chars "_ \n"))
+;;   (let ((success nil)
+;;         (orig (point)))
+;;     (while (and (looking-at earl-id-regexp)
+;;                 (or skip-underscore
+;;                     (not (equal (match-string 0) "_"))))
+;;       (setq success t)
+;;       (forward-char 1))
+;;     (and success
+;;          (earl-last-token-range orig (point)))))
 
-(defun earl-backward-word-strict (&optional skip-chars skip-underscore)
-  (skip-chars-backward (or skip-chars "_ \n"))
-  (let ((success nil)
-        (orig (point)))
-    (condition-case nil
-        (progn
-          (backward-char 1)
-          (while (and (looking-at earl-id-regexp)
-                      (or skip-underscore
-                          (not (equal (match-string 0) "_"))))
-            (setq success t)
-            (backward-char 1))
-          (forward-char 1)
-          success)
-      (error success))
-    (and success
-         (earl-last-token-range (point) orig))))
-
-
-(defun earl-forward-operator-strict (&optional skip-chars)
-  (skip-chars-forward (or skip-chars " \n"))
-  (let ((success nil)
-        (orig (point)))
-    (while (and (looking-at earl-opchar-regexp)
-                (not (save-match-data (looking-at "<<")))
-                (not (save-match-data (looking-at ">>"))))
-      (setq success t)
-      (forward-char 1))
-    (and success
-         (earl-last-token-range (point) orig))))
-
-(defun earl-backward-operator-strict (&optional skip-chars)
-  (skip-chars-backward (or skip-chars " \n"))
-  (let ((success nil)
-        (orig (point)))
-    (condition-case nil
-        (progn
-          (backward-char 1)
-          (while (and (looking-at earl-opchar-regexp)
-                      (not (save-match-data (looking-at "<<")))
-                      (not (save-match-data (looking-at ">>"))))
-            (setq success t)
-            (backward-char 1))
-          (forward-char 1)
-          success)
-      (error success))
-    (and success
-         (earl-last-token-range (point) orig))))
+;; (defun earl-backward-word-strict (&optional skip-chars skip-underscore)
+;;   (skip-chars-backward (or skip-chars "_ \n"))
+;;   (let ((success nil)
+;;         (orig (point)))
+;;     (condition-case nil
+;;         (progn
+;;           (backward-char 1)
+;;           (while (and (looking-at earl-id-regexp)
+;;                       (or skip-underscore
+;;                           (not (equal (match-string 0) "_"))))
+;;             (setq success t)
+;;             (backward-char 1))
+;;           (forward-char 1)
+;;           success)
+;;       (error success))
+;;     (and success
+;;          (earl-last-token-range (point) orig))))
 
 
-(defun earl-forward-string-strict (&optional skip-chars)
-  (skip-chars-forward (or skip-chars " \n"))
-  (let ((orig (point)))
-    (when
-        (cond
-         ((eq (char-after) ?\')
-          (forward-char)
-          (if (save-match-data (looking-at "`esc`"))
-              (forward-char 1))
-          (forward-char 1)
-          t)
-         ((eq (char-after) ?\")
-          (forward-sexp)
-          t)
-         (t
-          nil))
-      (earl-last-token-range orig (point)))))
+;; (defun earl-forward-operator-strict (&optional skip-chars)
+;;   (skip-chars-forward (or skip-chars " \n"))
+;;   (let ((success nil)
+;;         (orig (point)))
+;;     (while (and (looking-at earl-opchar-regexp)
+;;                 (not (save-match-data (looking-at "<<")))
+;;                 (not (save-match-data (looking-at ">>"))))
+;;       (setq success t)
+;;       (forward-char 1))
+;;     (and success
+;;          (earl-last-token-range (point) orig))))
 
-(defun earl-backward-string-strict (&optional skip-chars)
-  (skip-chars-backward (or skip-chars " \n"))
-  (let ((orig (point)))
-    (backward-char 1)
-    (when
-        (cond
-         ((or (looking-back "'")
-              (looking-back "'`esc`"))
-          (goto-char (match-beginning 0))
-          t)
-         ((eq (char-after) ?\")
-          (forward-char)
-          (backward-sexp)
-          t)
-         (t
-          (forward-char 1)
-          nil))
-      (earl-last-token-range orig (point)))))
+;; (defun earl-backward-operator-strict (&optional skip-chars)
+;;   (skip-chars-backward (or skip-chars " \n"))
+;;   (let ((success nil)
+;;         (orig (point)))
+;;     (condition-case nil
+;;         (progn
+;;           (backward-char 1)
+;;           (while (and (looking-at earl-opchar-regexp)
+;;                       (not (save-match-data (looking-at "<<")))
+;;                       (not (save-match-data (looking-at ">>"))))
+;;             (setq success t)
+;;             (backward-char 1))
+;;           (forward-char 1)
+;;           success)
+;;       (error success))
+;;     (and success
+;;          (earl-last-token-range (point) orig))))
+
+
+;; (defun earl-forward-string-strict (&optional skip-chars)
+;;   (skip-chars-forward (or skip-chars " \n"))
+;;   (let ((orig (point)))
+;;     (when
+;;         (cond
+;;          ((eq (char-after) ?\')
+;;           (forward-char)
+;;           (if (save-match-data (looking-at "`esc`"))
+;;               (forward-char 1))
+;;           (forward-char 1)
+;;           t)
+;;          ((eq (char-after) ?\")
+;;           (forward-sexp)
+;;           t)
+;;          (t
+;;           nil))
+;;       (earl-last-token-range orig (point)))))
+
+;; (defun earl-backward-string-strict (&optional skip-chars)
+;;   (skip-chars-backward (or skip-chars " \n"))
+;;   (let ((orig (point)))
+;;     (backward-char 1)
+;;     (when
+;;         (cond
+;;          ((or (looking-back "'")
+;;               (looking-back "'`esc`"))
+;;           (goto-char (match-beginning 0))
+;;           t)
+;;          ((eq (char-after) ?\")
+;;           (forward-char)
+;;           (backward-sexp)
+;;           t)
+;;          (t
+;;           (forward-char 1)
+;;           nil))
+;;       (earl-last-token-range orig (point)))))
     
 
 
-(defun earl-forward-list-strict (&optional skip-chars)
-  (skip-chars-forward (or skip-chars " \n"))
-  (let ((orig (point)))
-    (if (not (memq (char-after) earl-bracket-openers))
-        nil
-      (forward-list)
-      (earl-last-token-range orig (point)))))
+;; (defun earl-forward-list-strict (&optional skip-chars)
+;;   (skip-chars-forward (or skip-chars " \n"))
+;;   (let ((orig (point)))
+;;     (if (not (memq (char-after) earl-bracket-openers))
+;;         nil
+;;       (forward-list)
+;;       (earl-last-token-range orig (point)))))
 
-(defun earl-backward-list-strict (&optional skip-chars)
-  (skip-chars-backward (or skip-chars " \n"))
-  (let ((orig (point)))
-    (if (not (memq (char-before) earl-bracket-closers))
-        nil
-      (backward-list)
-      (earl-last-token-range orig (point)))))
-
-
-(defun earl-forward-comment-strict (&optional skip-chars)
-  (skip-chars-forward (or skip-chars " \n"))
-  (let* ((state (syntax-ppss))
-         (in-comment (nth 4 state))
-         (comment-start (nth 8 state)))
-    (when in-comment
-      (goto-char comment-start))
-    (if (not (looking-at ";;\\|;("))
-        nil
-      (forward-comment (point))
-      t)))
-
-(defun earl-backward-comment-strict (&optional skip-chars)
-  (skip-chars-backward (or skip-chars " \n"))
-  (backward-char 1)
-  (let* ((state (syntax-ppss))
-         (in-comment (nth 4 state))
-         (comment-start (nth 8 state)))
-    (if in-comment
-        (progn
-          (goto-char comment-start)
-          t)
-      (forward-char 1)
-      nil)))
+;; (defun earl-backward-list-strict (&optional skip-chars)
+;;   (skip-chars-backward (or skip-chars " \n"))
+;;   (let ((orig (point)))
+;;     (if (not (memq (char-before) earl-bracket-closers))
+;;         nil
+;;       (backward-list)
+;;       (earl-last-token-range orig (point)))))
 
 
-(defun earl-forward-sexp-helper (&optional skip-chars)
-  (unless skip-chars (setq skip-chars " \n"))
-  (let ((x nil)
-        (orig (point)))
-    (let ((rval (or
-                 (progn (setq x 'nil)
-                        (skip-chars-forward skip-chars)
-                        (setq orig (point))
-                        (and (eobp)
-                             (setq earl-last-token "")))
-                 (progn (setq x 'comment)  (earl-forward-comment-strict skip-chars))
-                 (progn (setq x 'string)   (earl-forward-string-strict skip-chars))
-                 (progn (setq x 'word)     (earl-forward-word-strict skip-chars t))
-                 (progn (setq x 'operator) (earl-forward-operator-strict skip-chars))
-                 (progn (setq x 'list)     (earl-forward-list-strict skip-chars))
-                 (progn (setq x 'cont)     (when (looking-at "\\\\")
-                                             (forward-char 1)
-                                             (earl-last-token-range orig (point))))
-                 (progn (setq x 'nil)      (when (memq (char-after) earl-bracket-closers)
-                                             (earl-last-token-range (point) (+ (point) 1))))
-                 (progn (setq x 'other)    (forward-char 1)
-                        (earl-last-token-range orig (point))))))
-      x)))
+;; (defun earl-forward-comment-strict (&optional skip-chars)
+;;   (skip-chars-forward (or skip-chars " \n"))
+;;   (let* ((state (syntax-ppss))
+;;          (in-comment (nth 4 state))
+;;          (comment-start (nth 8 state)))
+;;     (when in-comment
+;;       (goto-char comment-start))
+;;     (if (not (looking-at ";;\\|;("))
+;;         nil
+;;       (forward-comment (point))
+;;       t)))
 
-(defun earl-backward-sexp-helper (&optional skip-chars)
-  (unless skip-chars (setq skip-chars " \n"))
-  (let ((x nil)
-        (orig (point)))
-    (let ((rval (or
-                 (progn (setq x 'nil)
-                        (skip-chars-backward skip-chars)
-                        (setq orig (point))
-                        (and (bobp)
-                             (setq earl-last-token "")))
-                 (progn (setq x 'comment)  (earl-backward-comment-strict skip-chars))
-                 (progn (setq x 'string)   (earl-backward-string-strict skip-chars))
-                 (progn (setq x 'word)     (earl-backward-word-strict skip-chars t))
-                 (progn (setq x 'operator) (earl-backward-operator-strict skip-chars))
-                 (progn (setq x 'list)     (earl-backward-list-strict skip-chars))
-                 (progn (setq x 'cont)     (when (looking-back "\\\\")
-                                             (backward-char 1)
-                                             (earl-last-token-range orig (point))))
-                 (progn (setq x 'nil)      (when (memq (char-before) earl-bracket-openers)
-                                             (earl-last-token-range (- (point) 1) (point))))
-                 (progn (setq x 'other)    (backward-char 1)
-                        (earl-last-token-range orig (point))))))
-      x)))
+;; (defun earl-backward-comment-strict (&optional skip-chars)
+;;   (skip-chars-backward (or skip-chars " \n"))
+;;   (backward-char 1)
+;;   (let* ((state (syntax-ppss))
+;;          (in-comment (nth 4 state))
+;;          (comment-start (nth 8 state)))
+;;     (if in-comment
+;;         (progn
+;;           (goto-char comment-start)
+;;           t)
+;;       (forward-char 1)
+;;       nil)))
 
 
-(defun earl-forward-word (&optional count)
-  (interactive "p")
-  (dotimes (i count)
-    (let ((skip " \n<>\"'()[]{}"))
-      (while (not (earl-forward-word-strict skip))
-        (unless (earl-forward-operator-strict skip)
-          (forward-char 1))))))
+;; (defun earl-forward-sexp-helper (&optional skip-chars)
+;;   (unless skip-chars (setq skip-chars " \n"))
+;;   (let ((x nil)
+;;         (orig (point)))
+;;     (let ((rval (or
+;;                  (progn (setq x 'nil)
+;;                         (skip-chars-forward skip-chars)
+;;                         (setq orig (point))
+;;                         (and (eobp)
+;;                              (setq earl-last-token "")))
+;;                  (progn (setq x 'comment)  (earl-forward-comment-strict skip-chars))
+;;                  (progn (setq x 'string)   (earl-forward-string-strict skip-chars))
+;;                  (progn (setq x 'word)     (earl-forward-word-strict skip-chars t))
+;;                  (progn (setq x 'operator) (earl-forward-operator-strict skip-chars))
+;;                  (progn (setq x 'list)     (earl-forward-list-strict skip-chars))
+;;                  (progn (setq x 'cont)     (when (looking-at "\\\\")
+;;                                              (forward-char 1)
+;;                                              (earl-last-token-range orig (point))))
+;;                  (progn (setq x 'nil)      (when (memq (char-after) earl-bracket-closers)
+;;                                              (earl-last-token-range (point) (+ (point) 1))))
+;;                  (progn (setq x 'other)    (forward-char 1)
+;;                         (earl-last-token-range orig (point))))))
+;;       x)))
 
-(defun earl-backward-word (&optional count)
-  (interactive "p")
-  (dotimes (i count)
-    (let ((skip " \n<>\"'()[]{}"))
-      (while (not (earl-backward-word-strict skip))
-        (unless (earl-backward-operator-strict skip)
-          (backward-char 1))))))
+;; (defun earl-backward-sexp-helper (&optional skip-chars)
+;;   (unless skip-chars (setq skip-chars " \n"))
+;;   (let ((x nil)
+;;         (orig (point)))
+;;     (let ((rval (or
+;;                  (progn (setq x 'nil)
+;;                         (skip-chars-backward skip-chars)
+;;                         (setq orig (point))
+;;                         (and (bobp)
+;;                              (setq earl-last-token "")))
+;;                  (progn (setq x 'comment)  (earl-backward-comment-strict skip-chars))
+;;                  (progn (setq x 'string)   (earl-backward-string-strict skip-chars))
+;;                  (progn (setq x 'word)     (earl-backward-word-strict skip-chars t))
+;;                  (progn (setq x 'operator) (earl-backward-operator-strict skip-chars))
+;;                  (progn (setq x 'list)     (earl-backward-list-strict skip-chars))
+;;                  (progn (setq x 'cont)     (when (looking-back "\\\\")
+;;                                              (backward-char 1)
+;;                                              (earl-last-token-range orig (point))))
+;;                  (progn (setq x 'nil)      (when (memq (char-before) earl-bracket-openers)
+;;                                              (earl-last-token-range (- (point) 1) (point))))
+;;                  (progn (setq x 'other)    (backward-char 1)
+;;                         (earl-last-token-range orig (point))))))
+;;       x)))
 
-(defun earl-forward-sexp (&optional count)
-  (interactive "p")
-  (dotimes (i count)
-    (earl-forward-sexp-helper)))
 
-(defun earl-backward-sexp (&optional count)
-  (interactive "p")
-  (dotimes (i count)
-    (earl-backward-sexp-helper)))
+;; (defun earl-forward-word (&optional count)
+;;   (interactive "p")
+;;   (dotimes (i count)
+;;     (let ((skip " \n<>\"'()[]{}"))
+;;       (while (not (earl-forward-word-strict skip))
+;;         (unless (earl-forward-operator-strict skip)
+;;           (forward-char 1))))))
+
+;; (defun earl-backward-word (&optional count)
+;;   (interactive "p")
+;;   (dotimes (i count)
+;;     (let ((skip " \n<>\"'()[]{}"))
+;;       (while (not (earl-backward-word-strict skip))
+;;         (unless (earl-backward-operator-strict skip)
+;;           (backward-char 1))))))
+
+;; (defun earl-forward-sexp (&optional count)
+;;   (interactive "p")
+;;   (dotimes (i count)
+;;     (earl-forward-sexp-helper)))
+
+;; (defun earl-backward-sexp (&optional count)
+;;   (interactive "p")
+;;   (dotimes (i count)
+;;     (earl-backward-sexp-helper)))
 
 
 ;;;;;;;;;;;;;;
 ;; DELETION ;;
 ;;;;;;;;;;;;;;
 
-(defun earl-kill-word (&optional count)
-  (interactive "p")
-  (let ((orig (point)))
-    (earl-forward-word count)
-    (kill-region orig (point))))
+;; (defun earl-kill-word (&optional count)
+;;   (interactive "p")
+;;   (let ((orig (point)))
+;;     (earl-forward-wor dcount)
+;;     (kill-region orig (point))))
 
-(defun earl-kill-backward-word (&optional count)
-  (interactive "p")
-  (let ((orig (point)))
-    (earl-backward-word count)
-    (kill-region orig (point))))
-
-
-(defun earl-delete-char (&optional count)
-  (interactive "p")
-  (let ((orig (point)))
-    (forward-char count)
-    (delete-region orig (point))))
-
-(defun earl-delete-backward-char (&optional count)
-  (interactive "p")
-  (let ((orig (point)))
-    (cond
-     ((beginning-of-line-p)
-      (delete-backward-char 1)
-      (while (and (equal (char-before) ?\ )
-                  (not (zerop (mod (current-column) earl-indent))))
-        (delete-backward-char 1)))
-     (t
-      (backward-char count)
-      (delete-region (point) orig)))))
+;; (defun earl-kill-backward-word (&optional count)
+;;   (interactive "p")
+;;   (let ((orig (point)))
+;;     (earl-backward-word count)
+;;     (kill-region orig (point))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;
-;; FIND CONSTRUCTOR ;;
-;;;;;;;;;;;;;;;;;;;;;;
+;; (defun earl-delete-char (&optional count)
+;;   (interactive "p")
+;;   (let ((orig (point)))
+;;     (forward-char count)
+;;     (delete-region orig (point))))
 
-(defun earl-find-constructor (&optional pos nocont)
-  (unless pos (setq pos (point)))
-  (save-excursion
-    (save-match-data
-      (let ((line-span (if (bolp) 0 1))
-            (end-of-constructor nil)
-            (len 0)
-            (rval pos))
-        (goto-char pos)
-        (catch 'return
-          (while t
-            (let* ((value (earl-backward-sexp-helper))
-                   (last-token earl-last-token))
-              (cond
-
-               ;; There is a suffix operator like in "a b# c: d", and
-               ;; in this case we remember where the suffix op is
-               ;; located (we will highlight up to there) and we keep
-               ;; going until we find some infix or prefix
-               ;; operator. Note that we keep going conservatively,
-               ;; i.e. "a + b* c: d" will only highlight "b*" even
-               ;; though "*" might have lower priority than "+".
-               ((and (equal value 'operator)
-                     (earl-looking-at-suffix))
-                (setq end-of-constructor (+ (point) (length last-token))))
-
-               ;; There is an operator there. We stop.
-               ((and (equal value 'operator)
-                     (not (string-match "^\\(\\.\\|\\$\\|@\\)+$" last-token)))
-                (throw 'return (cons rval (or end-of-constructor (+ rval len)))))
-
-               ;; There is a line continuation. We extend the
-               ;; line-span to tolerate going up to the line where the
-               ;; continuation is located.
-               ((and (equal value 'cont)
-                     (not nocont))
-                (setq line-span (count-lines pos (point))))
-
-               ;; We ignore comments completely.
-               ((equal value 'comment)
-                t)
-
-               ;; Parens/bracket start. We stop.
-               ((equal value 'nil)
-                (throw 'return (cons rval (or end-of-constructor (+ rval len)))))
-
-               ;; A bit convoluted, but this is a () sexp that ends on
-               ;; the same line we were, but may start on another
-               ;; line. We extend line-span.
-               ((and (member value '(list string))
-                     (not (> (count-lines pos (+ (point) (length last-token))) line-span)))
-                (setq line-span (count-lines pos (point)))
-                (setq rval (point))
-                (setq len (length last-token)))
-
-               ;; We check if we're still on the same line, or a
-               ;; previous line if the line-span was extended. If we
-               ;; are too far, we stop.
-               ((> (count-lines pos (point)) line-span)
-                (throw 'return (cons rval (or end-of-constructor (+ rval len)))))
-
-               ;; Anything else we skip over.
-               (t
-                (setq rval (point))
-                (setq len (length last-token)))))))))))
+;; (defun earl-delete-backward-char (&optional count)
+;;   (interactive "p")
+;;   (let ((orig (point)))
+;;     (cond
+;;      ((beginning-of-line-p)
+;;       (delete-backward-char 1)
+;;       (while (and (equal (char-before) ?\ )
+;;                   (not (zerop (mod (current-column) earl-indent))))
+;;         (delete-backward-char 1)))
+;;      (t
+;;       (backward-char count)
+;;       (delete-region (point) orig)))))
 
 
 ;;;;;;;;;;;;
@@ -655,12 +584,26 @@
       (earl-indent-back)
     (backward-delete-char 1)))
 
+(defun earl-back-sexp ()
+  (condition-case nil
+      (let ((here (point))
+            (target (scan-sexps (point) -1)))
+        (if (= here target)
+            nil
+          (goto-char target)
+          t))
+    (error nil)))
+
 (defun earl-indent-back ()
   (interactive)
   (let ((curr (current-column))
         (done nil)
         (new 0)
         (bar? nil))
+    (defun backline ()
+      (beginning-of-line)
+      (condition-case nil (backward-char)
+        (error (setq done t))))
     (save-excursion
       (while (not done)
         (cond
@@ -669,11 +612,9 @@
          ((and (looking-back "^ *")
                (looking-at " *$")
                (not (= (point) 0)))
-          (beginning-of-line)
-          (backward-char))          
+          (backline))
          ((looking-back "^ *")
-          (beginning-of-line)
-          (backward-char)
+          (backline)
           (let ((indent (length (match-string 0))))
             (when (< indent curr)
               (setq done t)
@@ -687,8 +628,10 @@
               (setq new indent))))
          ;; ((backward-sexp)
          ;;  nil)
-         ((not (equal (earl-backward-sexp-helper) 'nil))
+         ((earl-back-sexp)
           nil)
+         ;; ((not (equal (earl-backward-sexp-helper) 'nil))
+         ;;  nil)
          (t
           (setq done t)
           (let ((indent (car (earl-logical-indent))))
@@ -717,7 +660,9 @@
           (setq done t)
           (setq bar? t)
           (setq result (- (+ result (current-column)) 2)))
-         ((not (equal (earl-backward-sexp-helper) 'nil))
+         ;; ((not (equal (earl-backward-sexp-helper) 'nil))
+         ;;  nil)
+         ((earl-back-sexp)
           nil)
          (t
           (if (and (looking-at " *$") (looking-back ".") (= result 0))
@@ -777,8 +722,9 @@
       (let* ((_curr (earl-logical-indent))
              (curr (car _curr)))
         (setq bar? (cdr _curr))
-        (if (or (earl-backward-operator-strict)
-                (looking-back earl-wordop-regexp))
+        ;; (if (or (earl-backward-operator-strict)
+        ;;         (looking-back earl-wordop-regexp))
+        (if (looking-back real-earl-op-regexp)
             (progn
               (setq bar? nil)
               (setq new-indent (+ curr earl-indent)))
@@ -806,8 +752,8 @@
            ((< (+ curr delta) 0)
             (setq the-end -1))
            (t
-            (earl-reindent (+ curr delta) bar?))))
-        (setq the-end (+ the-end delta))
+            (earl-reindent (+ curr delta) bar?)
+            (setq the-end (+ the-end delta)))))
         (next-line)
         (beginning-of-line)))))
 
@@ -820,21 +766,21 @@
 
     (define-key map [backspace] 'earl-backspace)
 
-    (define-key map "\C-d" 'earl-delete-char)
+    ;; (define-key map "\C-d" 'earl-delete-char)
 
-    (define-key map "\C-?" 'earl-delete-backward-char)
-    (define-key map "\C-d" 'earl-delete-char)
+    ;; (define-key map "\C-?" 'earl-delete-backward-char)
+    ;; (define-key map "\C-d" 'earl-delete-char)
     (define-key map "\M-;" 'earl-comment-dwim)
 
     (define-key map "\C-c\C-j" 'earl-indent-back)
     (define-key map "\C-t" 'forward-char)
     (define-key map "\C-c\C-t" 'backward-char)
-    (define-key map [C-right] 'earl-forward-word)
-    (define-key map [C-left] 'earl-backward-word)
-    (define-key map "\C-\M-f" 'earl-forward-sexp)
-    (define-key map "\C-\M-b" 'earl-backward-sexp)
-    (define-key map [C-delete] 'earl-kill-word)
-    (define-key map [C-backspace] 'earl-kill-backward-word)
+    ;; (define-key map [C-right] 'earl-forward-word)
+    ;; (define-key map [C-left] 'earl-backward-word)
+    ;; (define-key map "\C-\M-f" 'earl-forward-sexp)
+    ;; (define-key map "\C-\M-b" 'earl-backward-sexp)
+    ;; (define-key map [C-delete] 'earl-kill-word)
+    ;; (define-key map [C-backspace] 'earl-kill-backward-word)
     map))
 
 
@@ -846,7 +792,7 @@
 
     ;; Comments: ; ... \n or ;* ... *; or ;( ... );
     (modify-syntax-entry ?\; ". 124b" table)
-    (modify-syntax-entry ?*  ". 23n" table)
+    (modify-syntax-entry ?*  "_ 23n" table)
     (modify-syntax-entry ?\n "> b" table)
 
     ;; Brackets: () [] {}
@@ -861,22 +807,22 @@
     (modify-syntax-entry ?_ "w" table)
 
     ;; Operator characters
-    (modify-syntax-entry ?? "." table)
-    (modify-syntax-entry ?! "." table)
-    (modify-syntax-entry ?< "." table)
-    (modify-syntax-entry ?> "." table)
-    (modify-syntax-entry ?= "." table)
-    (modify-syntax-entry ?+ "." table)
-    (modify-syntax-entry ?- "." table)
-    (modify-syntax-entry ?* "." table)
-    (modify-syntax-entry ?/ "." table)
-    (modify-syntax-entry ?% "." table)
-    (modify-syntax-entry ?& "." table)
-    (modify-syntax-entry ?| "." table)
-    (modify-syntax-entry ?. "." table)
-    (modify-syntax-entry ?@ "." table)
-    (modify-syntax-entry ?~ "." table)
-    (modify-syntax-entry ?, "." table)
+    (modify-syntax-entry ?? "_" table)
+    (modify-syntax-entry ?! "_" table)
+    (modify-syntax-entry ?< "_" table)
+    (modify-syntax-entry ?> "_" table)
+    (modify-syntax-entry ?= "_" table)
+    (modify-syntax-entry ?+ "_" table)
+    (modify-syntax-entry ?- "_" table)
+    (modify-syntax-entry ?* "_" table)
+    (modify-syntax-entry ?/ "_" table)
+    (modify-syntax-entry ?% "_" table)
+    (modify-syntax-entry ?& "_" table)
+    (modify-syntax-entry ?| "_" table)
+    (modify-syntax-entry ?. "_" table)
+    (modify-syntax-entry ?@ "_" table)
+    (modify-syntax-entry ?~ "_" table)
+    (modify-syntax-entry ?, "_" table)
 
     table))
 
