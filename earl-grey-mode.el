@@ -184,7 +184,7 @@
        "$"))
 
 (setq real-earl-keymac-regexp
-      "\\b\\(?:return\\|break\\|continue\\|pass\\|else\\)\\b")
+      "\\b\\(?:return\\|break\\|continue\\|pass\\|else\\|match\\)\\b")
 
 (setq earl-id-regexp
       (regexp-opt earl-id-characters))
@@ -823,6 +823,8 @@
     (modify-syntax-entry ?@ "_" table)
     (modify-syntax-entry ?~ "_" table)
     (modify-syntax-entry ?, "_" table)
+    (modify-syntax-entry ?# "_" table)
+    (modify-syntax-entry ?' "_" table)
 
     table))
 
@@ -890,7 +892,7 @@
         'earl-font-lock-op))))
 
     ;; Some macros that have no arguments and therefore won't be highlighted
-    (,earl-keymac-regexp
+    (,real-earl-keymac-regexp
      . 'earl-font-lock-major-constructor)
 
     ;; Heuristic to highlight keywords
