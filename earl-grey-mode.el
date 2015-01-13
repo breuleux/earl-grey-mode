@@ -165,7 +165,7 @@
 (setq real-earl-wordop-regexp
       (concat
        "\\b"
-       (regexp-opt '("with" "where" "each" "when" "in" "and" "or" "as" "not"))
+       (regexp-opt '("with" "where" "each" "when" "in" "and" "or" "as" "not" "mod" "of"))
        "\\b"))
 
 (setq real-earl-opchar-regexp
