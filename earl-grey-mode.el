@@ -908,7 +908,7 @@
            ((looking-at " *:")
             (goto-char x0)
             (cond
-             ((and (looking-back (concat "\\(" real-earl-op-regexp "\\) *"))
+             ((and (looking-back (concat " +\\(" real-earl-op-regexp "\\) +"))
                    (string-match real-earl-lowp-regexp (match-string 1)))
               'earl-font-lock-major-constructor)
              ((looking-back (concat "\\(^\\||\\) *"))
@@ -917,11 +917,16 @@
               nil)))
 
            ((or (looking-at (concat " +" (regexp-opt '("(" "[" "{" "\""))))
+                (looking-at (concat " +" real-earl-op-regexp real-earl-id-regexp))
+                (looking-at " not ")
                 (and
                  (looking-at (concat " +" real-earl-id-regexp))
                  (not (looking-at (concat " +" real-earl-op-regexp)))))
             (goto-char x0)
             (cond
+             ((and (looking-back (concat " +\\(" real-earl-op-regexp "\\) +"))
+                   (string-match real-earl-lowp-regexp (match-string 1)))
+              'earl-font-lock-major-constructor)
              ((and (looking-back (concat real-earl-op-regexp " *"))
                    (not (looking-back " | *")))
              ;; ((looking-back (concat real-earl-op-regexp " *"))
