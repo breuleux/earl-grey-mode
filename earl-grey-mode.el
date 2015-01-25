@@ -39,6 +39,12 @@
   "*Keywords starting important control structures."
   :type '(repeat string) :group 'earl)
 
+;;;###autoload
+(defcustom earl-special-constants
+  '("true" "false" "null", "undefined")
+  "*Special constants."
+  :type '(repeat string) :group 'earl)
+
 
 ;;;;;;;;;;;
 ;; FACES ;;
@@ -74,6 +80,11 @@
 (defface earl-font-lock-major-constructor
   (earl-stock-face "purple" "cyan" t)
   "Face for major control structures like if, else, for, etc."
+  :group 'earl-faces)
+
+(defface earl-font-lock-special-constant
+  (earl-stock-face "dark cyan" "magenta")
+  "Face for special constants."
   :group 'earl-faces)
 
 (defface earl-font-lock-definition
@@ -186,6 +197,8 @@
 
 (setq real-earl-keymac-regexp
       "\\b\\(?:return\\|break\\|continue\\|pass\\|else\\|match\\)\\b")
+(setq real-earl-const-regexp
+      "\\b\\(?:true\\|false\\|null\\|undefined\\)\\b")
 
 (setq earl-id-regexp
       (regexp-opt earl-id-characters))
@@ -195,10 +208,10 @@
       (concat (regexp-opt earl-c2op-characters) "+"))
 (setq earl-list-sep-regexp
       (regexp-opt earl-list-sep-characters))
-(setq earl-wordop-regexp
-      "\\b\\(?:with\\|where\\|each\\|when\\|in\\|and\\|or\\|as\\|instanceof\\|not\\)\\b")
-(setq earl-keymac-regexp
-      "\\b\\(?:return\\|throw\\|delete\\|break\\|continue\\|match\\)\\b")
+;; (setq earl-wordop-regexp
+;;       "\\b\\(?:with\\|where\\|each\\|when\\|in\\|and\\|or\\|as\\|instanceof\\|not\\)\\b")
+;; (setq earl-keymac-regexp
+;;       "\\b\\(?:return\\|throw\\|delete\\|break\\|continue\\|match\\)\\b")
 
 (setq earl-opchar-regexp
       (concat earl-c1op-regexp
@@ -895,6 +908,9 @@
     ;; Some macros that have no arguments and therefore won't be highlighted
     (,real-earl-keymac-regexp
      . 'earl-font-lock-major-constructor)
+
+    (,real-earl-const-regexp
+     . 'earl-font-lock-special-constant)
 
     ;; Heuristic to highlight keywords
     (,real-earl-id-regexp
