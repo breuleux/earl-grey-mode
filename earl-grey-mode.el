@@ -181,7 +181,7 @@
        "\\b"))
 
 (setq real-earl-opchar-regexp
-      "[-+*/~^<>=%&|?!@#.:']")
+      "[-+*/~^<>=%&|?!@#.:]")
 
 (setq real-earl-op-regexp
       (concat
@@ -803,6 +803,8 @@
 
     ;; Strings: ""
     (modify-syntax-entry ?\" "\"" table)
+    (modify-syntax-entry ?' "|" table)
+    (modify-syntax-entry ?` "|" table)
 
     ;; Comments: ; ... \n or ;* ... *; or ;( ... );
     (modify-syntax-entry ?\; ". 124b" table)
@@ -838,7 +840,7 @@
     (modify-syntax-entry ?~ "_" table)
     (modify-syntax-entry ?, "_" table)
     (modify-syntax-entry ?# "_" table)
-    (modify-syntax-entry ?' "_" table)
+    ;; (modify-syntax-entry ?' "_" table)
 
     table))
 
