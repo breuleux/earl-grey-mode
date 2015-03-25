@@ -111,6 +111,11 @@
 
 ;; Token faces
 
+(defface earl-font-lock-variable
+  (earl-stock-face "black" "white")
+  "Face for variable names"
+  :group 'earl-faces)
+
 (defface earl-font-lock-symbol
   (earl-stock-face "dark red" "red")
   "Face for tokens like .x"
@@ -885,7 +890,7 @@
     ;;  0 'earl-font-lock-interpolation t)
 
     ;; Symbol: .blabla
-    (,(concat "\\.\\(" earl-id-regexp "\\)+")
+    (,(concat "\\.\\(" real-earl-id-regexp "\\)+")
      . 'earl-font-lock-symbol)
 
     ;; Struct: #blabla
@@ -957,7 +962,7 @@
              (t
               'earl-font-lock-major-constructor)))
            (t
-            nil))))))
+            'earl-font-lock-variable))))))
 
     ;; Operators
     (,real-earl-op-regexp
