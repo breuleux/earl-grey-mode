@@ -171,7 +171,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq real-earl-id-regexp
-      "[A-Za-z_$][A-Za-z_$]*")
+      "[A-Za-z_$]\\([A-Za-z_$]\\|-[A-Za-z_]\\)*")
 
 (setq real-earl-wordop-regexp
       (concat
@@ -196,7 +196,7 @@
        "$"))
 
 (setq real-earl-keymac-regexp
-      "\\b\\(?:return\\|break\\|continue\\|pass\\|else\\|match\\)\\b")
+      "\\b\\(?:return\\|break\\|continue\\|pass\\|else\\|match\\|macro\\)\\b")
 (setq real-earl-const-regexp
       "\\b\\(?:true\\|false\\|null\\|undefined\\)\\b")
 
@@ -896,16 +896,21 @@
     (,(concat "[@]\\(" earl-id-regexp "\\)*")
      . 'earl-font-lock-prefix)
 
+    ;; ;; Operators
+    ;; (,real-earl-op-regexp
+    ;;  (0
+    ;;   (cond
+    ;;    ((member (match-string 0) '(":" "|"))
+    ;;     'earl-font-lock-wordop)
+    ;;    ((string-match real-earl-wordop-regexp (match-string 0))
+    ;;     'earl-font-lock-wordop)
+    ;;    (t
+    ;;     'earl-font-lock-op))))
+
     ;; Operators
-    (,real-earl-op-regexp
+    (,real-earl-wordop-regexp
      (0
-      (cond
-       ((member (match-string 0) '(":" "|"))
-        'earl-font-lock-wordop)
-       ((string-match real-earl-wordop-regexp (match-string 0))
-        'earl-font-lock-wordop)
-       (t
-        'earl-font-lock-op))))
+      'earl-font-lock-wordop))
 
     ;; Some macros that have no arguments and therefore won't be highlighted
     (,real-earl-keymac-regexp
@@ -953,6 +958,17 @@
               'earl-font-lock-major-constructor)))
            (t
             nil))))))
+
+    ;; Operators
+    (,real-earl-op-regexp
+     (0
+      (cond
+       ((member (match-string 0) '(":" "|"))
+        'earl-font-lock-wordop)
+       ;; ((string-match real-earl-wordop-regexp (match-string 0))
+       ;;  'earl-font-lock-wordop)
+       (t
+        'earl-font-lock-op))))
 
     )
   "Keywords for highlighting.")
