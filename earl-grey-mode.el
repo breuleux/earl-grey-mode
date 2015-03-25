@@ -917,9 +917,9 @@
      (0
       'earl-font-lock-wordop))
 
-    ;; Some macros that have no arguments and therefore won't be highlighted
-    (,real-earl-keymac-regexp
-     . 'earl-font-lock-major-constructor)
+    ;; ;; Some macros that have no arguments and therefore won't be highlighted
+    ;; (,real-earl-keymac-regexp
+    ;;  . 'earl-font-lock-major-constructor)
 
     (,real-earl-const-regexp
      . 'earl-font-lock-special-constant)
@@ -932,7 +932,8 @@
         (save-excursion
           (goto-char x1)
           (cond
-
+           ((string-match real-earl-keymac-regexp (match-string 0))
+            'earl-font-lock-major-constructor)
            ((looking-at " *:")
             (goto-char x0)
             (cond
