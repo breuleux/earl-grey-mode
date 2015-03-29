@@ -898,7 +898,7 @@
      . 'earl-font-lock-prefix)
 
     ;; Prefixes: @blabla
-    (,(concat "[@]\\(" earl-id-regexp "\\)*")
+    (,(concat "[@]\\(" real-earl-id-regexp "\\)*")
      . 'earl-font-lock-prefix)
 
     ;; ;; Operators
