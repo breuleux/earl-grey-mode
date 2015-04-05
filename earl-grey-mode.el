@@ -915,7 +915,20 @@
     ;; Operators
     (,real-earl-wordop-regexp
      (0
-      'earl-font-lock-wordop))
+      (let ((x0 (match-beginning 0))
+            (x1 (match-end 0)))
+        (save-excursion
+          (goto-char x1)
+          (cond
+           ((looking-at "-")
+            nil)
+           (t
+            (goto-char x0)
+            (cond
+             ((looking-back "-")
+              nil)
+             (t
+              'earl-font-lock-wordop))))))))
 
     ;; ;; Some macros that have no arguments and therefore won't be highlighted
     ;; (,real-earl-keymac-regexp
