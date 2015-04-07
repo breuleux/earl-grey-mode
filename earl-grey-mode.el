@@ -176,7 +176,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq real-earl-id-regexp
-      "[A-Za-z_$]\\([A-Za-z_$]\\|-[A-Za-z_]\\)*")
+      "[A-Za-z_$]\\([A-Za-z_$0-9]\\|-[A-Za-z_$0-9]\\)*")
 
 (setq real-earl-wordop-regexp
       (concat
@@ -894,7 +894,7 @@
      . 'earl-font-lock-symbol)
 
     ;; Struct: #blabla
-    (,(concat "[#]\\(" earl-id-regexp "\\)+")
+    (,(concat "[#]\\(" real-earl-id-regexp "\\)+")
      . 'earl-font-lock-prefix)
 
     ;; Prefixes: @blabla
